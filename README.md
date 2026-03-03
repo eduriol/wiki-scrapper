@@ -31,10 +31,13 @@ whole wikipedia from any root page and save it to the DB.
 2. It's allowed and recommended using external libraries to read both `html` & `json` files
 3. Domain module shouldn't have dependencies to any other module
 
-
 ## Submitting task
 
-Task implementation should be shared on some public repository (for example github)
+Task implementation should be shared on some public repository (for example github).
+
+## Additional Information
+
+The exercise can be implemented either in Java or Kotlin.
 
 
         
