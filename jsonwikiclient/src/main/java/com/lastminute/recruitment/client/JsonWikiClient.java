@@ -1,5 +1,15 @@
 package com.lastminute.recruitment.client;
 
-public class JsonWikiClient {
-    // this should have a method that returns a Json representation of a Wikipedia page
+import com.lastminute.recruitment.domain.WikiPage;
+import com.lastminute.recruitment.domain.WikiPageReader;
+
+import java.util.Optional;
+
+public class JsonWikiClient implements WikiPageReader {
+
+    // TODO: implement JSON-based page fetching
+    @Override
+    public Optional<WikiPage> fetchPage(String link) {
+        return Optional.empty();
+    }
 }

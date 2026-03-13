@@ -1,6 +1,8 @@
 package com.lastminute.recruitment;
 
 import com.lastminute.recruitment.client.JsonWikiClient;
+import com.lastminute.recruitment.domain.WikiPageReader;
+import com.lastminute.recruitment.domain.WikiPageStore;
 import com.lastminute.recruitment.domain.WikiScrapper;
 import com.lastminute.recruitment.persistence.WikiPageRepository;
 import org.springframework.context.annotation.Bean;
@@ -22,7 +24,7 @@ public class WikiScrapperConfiguration {
     }
 
     @Bean
-    public WikiScrapper wikiScrapper() {
-        return new WikiScrapper();
+    public WikiScrapper wikiScrapper(WikiPageReader pageReader, WikiPageStore pageStore) {
+        return new WikiScrapper(pageReader, pageStore);
     }
 }
