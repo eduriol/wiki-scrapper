@@ -33,11 +33,44 @@ A Depth-First Search alternative would replace the `Queue<String>` (FIFO) with a
 - **Root page not found**: throws `WikiPageNotFound` (unchecked exception). This is a hard failure — if the starting point doesn't exist, the operation cannot proceed.
 - **Child page not found**: logged as a WARNING and skipped. The scrapper continues with remaining links. This is a soft failure — broken links in a wiki are expected and should not abort the entire operation.
 
+### JsonWikiClient — JSON Adapter
+
+`JsonWikiClient` implements `WikiPageReader` by reading JSON files from the classpath. The URL-to-resource mapping extracts the last path segment from the link (e.g., `http://wikiscrapper.test/site1` → `wikiscrapper/site1.json`) and loads it via `ClassLoader.getResourceAsStream()`.
+
+Parsing uses Jackson's `ObjectMapper.readTree()` for lightweight tree-model access without needing a DTO class — the JSON structure maps directly to `WikiPage` fields. If a resource is not found or parsing fails, `Optional.empty()` is returned and an appropriate log message is emitted.
+
+#### Finding: `site5.json` was malformed
+
+The original `site5.json` was missing the closing `]` for the `links` array, making it invalid JSON. This was fixed as part of this commit. If malformed resources should be handled gracefully at runtime instead of being fixed at source, the current implementation already returns `Optional.empty()` and logs a SEVERE error on parse failures.
+
+## How to Build and Run
+
+```bash
+# Build the entire project (compile + test + package)
+mvn clean install
+
+# Run the application (Spring Boot)
+mvn -pl app spring-boot:run
+
+# Run with a specific profile (json or html)
+# On Bash / Linux / macOS
+mvn -pl app spring-boot:run -Dspring-boot.run.profiles=json
+
+# On PowerShell (Windows) — quotes are required around -D flags
+mvn -pl app spring-boot:run "-Dspring-boot.run.profiles=json"
+```
+
 ## How to Run Tests
 
 ```bash
+# All modules
+mvn test
+
 # Domain module only
 mvn -pl domain test
+
+# JSON client module only
+mvn -pl jsonwikiclient test
 ```
 
 ## Assumptions
