@@ -41,16 +41,25 @@ public class JsonWikiClient implements WikiPageReader {
 
             JsonNode root = objectMapper.readTree(input);
 
-            String title = root.get("title").asText();
-            String content = root.get("content").asText();
-            String selfLink = root.get("selfLink").asText();
+            Optional<String> title = Optional.ofNullable(root.get("title")).map(JsonNode::asText);
+            Optional<String> content = Optional.ofNullable(root.get("content")).map(JsonNode::asText);
+            Optional<String> selfLink = Optional.ofNullable(root.get("selfLink")).map(JsonNode::asText);
 
-            List<String> links = new ArrayList<>();
-            for (JsonNode linkNode : root.get("links")) {
-                links.add(linkNode.asText());
+            if (title.isEmpty() || content.isEmpty() || selfLink.isEmpty()) {
+                LOG.log(Level.SEVERE, "Missing required fields in JSON resource: {0}", resourcePath);
+                return Optional.empty();
             }
 
-            return Optional.of(new WikiPage(title, content, selfLink, links));
+            List<String> links = Optional.ofNullable(root.get("links"))
+                    .filter(JsonNode::isArray)
+                    .map(node -> {
+                        List<String> result = new ArrayList<>();
+                        node.forEach(item -> result.add(item.asText()));
+                        return result;
+                    })
+                    .orElse(List.of());
+
+            return Optional.of(new WikiPage(title.get(), content.get(), selfLink.get(), links));
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Error parsing JSON resource: {0}", resourcePath);
             return Optional.empty();

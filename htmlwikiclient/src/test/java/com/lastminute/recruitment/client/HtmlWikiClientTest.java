@@ -8,9 +8,9 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class JsonWikiClientTest {
+class HtmlWikiClientTest {
 
-    private final JsonWikiClient client = new JsonWikiClient();
+    private final HtmlWikiClient client = new HtmlWikiClient();
 
     @Test
     void shouldParsePageWithNoLinks() {
@@ -24,7 +24,7 @@ class JsonWikiClientTest {
         assertTrue(result.isPresent());
         WikiPage page = result.get();
         assertEquals("Site 1", page.getTitle());
-        assertEquals("Content 1", page.getContent());
+        assertEquals("Content1", page.getContent());
         assertEquals("http://wikiscrapper.test/site1", page.getSelfLink());
         assertTrue(page.getLinks().isEmpty());
     }
@@ -77,8 +77,8 @@ class JsonWikiClientTest {
     }
 
     @Test
-    void shouldReturnEmptyWhenRequiredFieldsAreMissing() {
-        // given — incomplete.json has only "content", missing "title", "selfLink" and "links"
+    void shouldReturnEmptyWhenRequiredElementsAreMissing() {
+        // given — incomplete.html has no <meta selfLink>, no <h1.title>, no <ul.links>
         String link = "http://wikiscrapper.test/incomplete";
 
         // when

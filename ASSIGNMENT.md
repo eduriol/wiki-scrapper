@@ -43,6 +43,21 @@ Parsing uses Jackson's `ObjectMapper.readTree()` for lightweight tree-model acce
 
 The original `site5.json` was missing the closing `]` for the `links` array, making it invalid JSON. This was fixed as part of this commit. If malformed resources should be handled gracefully at runtime instead of being fixed at source, the current implementation already returns `Optional.empty()` and logs a SEVERE error on parse failures.
 
+### HtmlWikiClient — HTML Adapter
+
+`HtmlWikiClient` implements `WikiPageReader` by reading HTML files from the classpath using the same URL-to-resource mapping as `JsonWikiClient` (last path segment, e.g., `site1` → `wikiscrapper/site1.html`).
+
+Parsing uses **Jsoup**, a well-established Java HTML parser. The HTML structure is queried with CSS selectors:
+
+| Field      | Selector                  | Extraction                |
+|------------|---------------------------|---------------------------|
+| `selfLink` | `meta[selfLink]`          | `attr("selfLink")`        |
+| `title`    | `h1.title`                | `.text()`                 |
+| `content`  | `p.content`               | `.text()`                 |
+| `links`    | `ul.links a[href]`        | `.attr("href")` per `<a>` |
+
+Jsoup was chosen over regex or manual parsing because it handles malformed HTML gracefully, provides a familiar CSS selector API, and has no transitive dependencies. The same error handling strategy applies: resource not found or parse failure returns `Optional.empty()` with an appropriate log message.
+
 ## How to Build and Run
 
 ```bash
@@ -71,6 +86,9 @@ mvn -pl domain test
 
 # JSON client module only
 mvn -pl jsonwikiclient test
+
+# HTML client module only
+mvn -pl htmlwikiclient test
 ```
 
 ## Assumptions
