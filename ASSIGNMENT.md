@@ -58,6 +58,23 @@ Parsing uses **Jsoup**, a well-established Java HTML parser. The HTML structure 
 
 Jsoup was chosen over regex or manual parsing because it handles malformed HTML gracefully, provides a familiar CSS selector API, and has no transitive dependencies. The same error handling strategy applies: resource not found or parse failure returns `Optional.empty()` with an appropriate log message.
 
+### Spring Profile-Based Client Selection
+
+The application uses **Spring Profiles** to select which `WikiPageReader` implementation is active at startup. `WikiScrapperConfiguration` declares two beans:
+
+- `JsonWikiClient` → `@Profile("json")`
+- `HtmlWikiClient` → `@Profile("html")`
+
+Only one is active at a time. The `WikiScrapper` bean receives a `WikiPageReader` parameter, and Spring injects whichever bean matches the active profile.
+
+The default profile is set in `application.properties`:
+
+```properties
+spring.profiles.active=json
+```
+
+This can be overridden at startup via command-line argument (see "How to Build and Run" section). This is a **compile-time / startup-time** decision, not a per-request one — the entire application runs with one client throughout its lifecycle.
+
 ## How to Build and Run
 
 ```bash
