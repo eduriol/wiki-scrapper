@@ -158,5 +158,3 @@ mvn -pl app test
 - **Rate limiting**: Throttle requests when scraping real websites to avoid being blocked.
 - **JSON request body**: Migrate from plain text to a JSON body (e.g., `{"url": "...", "maxDepth": 3}`) for extensibility.
 - **Pagination / depth limiting**: Add configurable max traversal depth to prevent unbounded scraping.
-- **Rate limiting**: Throttle requests when scraping real websites to avoid being blocked.
-
