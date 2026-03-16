@@ -22,7 +22,8 @@ These names are intentionally domain-oriented rather than technology-oriented (e
 1. Avoid infinite loops when the page graph contains cycles (e.g., page A links to B, B links back to A).
 2. Ensure each page is fetched and saved exactly once, even in diamond-shaped graphs (A → B, A → C, B → D, C → D).
 
-BFS was chosen over DFS for predictable level-order traversal. Both would work correctly for this use case.
+BFS was cho
+sen over DFS because it processes pages in level-order (closest to the root first), which makes the traversal easier to reason about and debug. In practice, both algorithms are equally correct for this use case since every reachable page is visited and persisted regardless of order.
 
 #### How DFS would differ
 
@@ -75,6 +76,37 @@ spring.profiles.active=json
 
 This can be overridden at startup via command-line argument (see "How to Build and Run" section). This is a **compile-time / startup-time** decision, not a per-request one — the entire application runs with one client throughout its lifecycle.
 
+### REST API Design
+
+The `WikiScrapperResource` exposes a single endpoint that accepts a plain text link in the request body, as defined in the original scaffolding. The controller delegates to `WikiScrapper.read()` and translates domain exceptions to HTTP status codes:
+
+- **204 No Content** on success — the operation is a side-effect (scrape and persist) with no response body needed.
+- **404 Not Found** when the root page does not exist — mapped from `WikiPageNotFound` via `@ExceptionHandler`.
+
+The plain text body format was kept to match the original scaffolding signature. In production, a JSON body (e.g., `{"url": "..."}`) would be more extensible for future parameters like max depth or filters.
+
+## API Reference
+
+### `POST /wiki/scrap`
+
+Scrapes a wiki page and all its linked pages recursively, persisting each one.
+
+**Request:**
+
+```
+POST /wiki/scrap
+Content-Type: text/plain
+
+http://wikiscrapper.test/site1
+```
+
+**Responses:**
+
+| Status | Description |
+|--------|-------------|
+| `204 No Content` | Scraping completed successfully. All reachable pages have been persisted. |
+| `404 Not Found` | The root page at the given link does not exist. |
+
 ## How to Build and Run
 
 ```bash
@@ -106,17 +138,25 @@ mvn -pl jsonwikiclient test
 
 # HTML client module only
 mvn -pl htmlwikiclient test
+
+# App integration tests only
+mvn -pl app test
 ```
 
 ## Assumptions
 
 1. The persistence layer (`WikiPageRepository.save()`) is provided as a no-op stub, as stated in the assignment. We call it normally and trust it works.
 2. Links in wiki pages are absolute URLs (e.g., `http://wikiscrapper.test/site1`).
+3. The request body for `POST /wiki/scrap` is a plain text string, matching the original scaffolding signature.
+4. The `site5.json` file was malformed (missing `]`) and was corrected as a data fix rather than adding runtime malformed-JSON handling.
 
 ## Future Work
 
 - **Concurrency**: Parallel BFS using `ExecutorService` + `ConcurrentHashMap` for visited set, fetching multiple pages simultaneously.
 - **Real HTTP client adapter**: An implementation of `WikiPageReader` that fetches pages from actual URLs over HTTP.
 - **Malformed resource handling**: Graceful error handling when JSON/HTML resources are syntactically invalid.
+- **Rate limiting**: Throttle requests when scraping real websites to avoid being blocked.
+- **JSON request body**: Migrate from plain text to a JSON body (e.g., `{"url": "...", "maxDepth": 3}`) for extensibility.
+- **Pagination / depth limiting**: Add configurable max traversal depth to prevent unbounded scraping.
 - **Rate limiting**: Throttle requests when scraping real websites to avoid being blocked.
 
